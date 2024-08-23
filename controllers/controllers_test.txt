@@ -1,0 +1,97 @@
+package controllers
+
+import (
+	"GoFiber/config"
+	"GoFiber/models"
+	"bytes"
+	"fmt"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/stretchr/testify/assert"
+)
+
+// var app *fiber.App
+
+// func init() {
+
+// }
+
+// Setup app and database for testing
+func setupApp() *fiber.App {
+	// Initialize database
+	// config.ConnectDatabase()
+
+	app := fiber.New()
+	// Set up routes
+	app.Post("/posts", CreatePost)
+	app.Get("/posts", GetAllPosts)
+	app.Post("/users", CreateUser)
+	app.Get("/users", GetAllUsers)
+	fmt.Println("setupapp")
+	fmt.Println("setupapp", config.DB)
+	return app
+}
+
+// Test CreatePost function
+func TestCreatePost(t *testing.T) {
+	app := setupApp()
+
+	post := `{"title":"Test Post","content":"Test Content","user_id":1}`
+	req := httptest.NewRequest("POST", "/posts", bytes.NewReader([]byte(post)))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatalf("Failed to send request: %v", err)
+	}
+
+	assert.Equal(t, fiber.StatusCreated, resp.StatusCode)
+}
+
+// Test GetAllPosts function
+func TestGetAllPosts(t *testing.T) {
+	app := setupApp()
+
+	// Create a post
+	config.DB.Create(&models.Post{Title: "Test Post", Content: "Test Content", UserID: 1})
+
+	req := httptest.NewRequest("GET", "/posts", nil)
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatalf("Failed to send request: %v", err)
+	}
+
+	assert.Equal(t, fiber.StatusOK, resp.StatusCode)
+}
+
+// Test CreateUser function
+func TestCreateUser(t *testing.T) {
+	app := setupApp()
+
+	user := `{"name":"John Doe","email":"john@example.com","balance":100}`
+	req := httptest.NewRequest("POST", "/users", bytes.NewReader([]byte(user)))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatalf("Failed to send request: %v", err)
+	}
+
+	assert.Equal(t, fiber.StatusCreated, resp.StatusCode)
+}
+
+// Test GetAllUsers function
+func TestGetAllUsers(t *testing.T) {
+	app := setupApp()
+
+	// Create a user
+	config.DB.Create(&models.User{Name: "John Doe", Email: "john@example.com", Balance: 100})
+
+	req := httptest.NewRequest("GET", "/users", nil)
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatalf("Failed to send request: %v", err)
+	}
+
+	assert.Equal(t, fiber.StatusOK, resp.StatusCode)
+}
